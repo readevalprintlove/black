@@ -1,0 +1,4 @@
+#
+sed -e "s/meta-apply '//g" -e "s/meta-apply //g" black.scm > __tmp__
+diff __tmp__ int.scm | less
+rm __tmp__
