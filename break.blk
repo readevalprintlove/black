@@ -1,0 +1,32 @@
+(define (loop prompt env ans)
+  (write ans)(newline)
+  (display prompt)(display "> ")
+  (base-eval (read) env (lambda (ans) (loop prompt env ans))))
+
+(define (eval-break pred env cont)
+  (define (run-break-loop)
+     (let ((result (loop "break" env 'break-loop)))
+	(write 'break-end)(newline)
+	(cont result)))
+  (if (null? pred)
+      (run-break-loop)
+      (base-eval (car pred) env
+		 (lambda (pred) (if pred (run-break-loop)
+					 (cont #f))))))
+
+(define (eval-inspect closure env cont)
+  (base-eval closure env (lambda (closure)
+  (let ((lambda-env (car (cdr (cdr (cdr closure))))))
+   (let ((result (loop "inspect" lambda-env 'inspect-loop)))
+      (write 'inspect-end)(newline)
+      (cont result))))))
+
+(let ((original-eval-application eval-application))
+  (set! eval-application
+	(lambda (exp env cont)
+	   (cond ((eq? (car exp) 'break)
+		  (eval-break (cdr exp) env cont))
+		 ((eq? (car exp) 'inspect)
+		  (eval-inspect (car (cdr exp)) env cont))
+		 (else
+		  (original-eval-application exp env cont))))))

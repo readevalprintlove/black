@@ -1,0 +1,145 @@
+README (July 12, 1996)
+
+This package contains the complete Scheme implementation of the
+reflective language Black.  For more details on Black, see [1].
+The file black.tar.gz (or .Z) contains the following files:
+
+  README	: this file
+  env.scm	: environment manipulation functions
+  black.scm	: the main body of Black
+  black-with-delta.scm
+		: same as black.scm except that it supports the
+		  delta abstraction introduced in Blond[2].
+  int.scm	: user observable metalevel interpreter
+  break.blk	: a sample program which install two new special
+		  forms: break and inspect.
+  compare	: a simple shell script which compares black.scm
+		  with int.scm (except for the insertion of meta-apply)
+
+Since the implementation uses no special constructs except for
+cons-stream and pp, it should run on almost any Scheme by typing:
+
+(define scheme-apply apply)
+(load "env.scm")
+(load "black.scm") or (load "black-with-delta.scm")
+(black)
+
+Followings are the Scheme system on which we have tested our
+implementation together with some specific definitions required:
+
+Chez Scheme Version 5.0a:
+	(define head car)
+	(define (tail x) (force (cdr x)))
+	(define-syntax cons-stream
+	  (syntax-rules ()
+	    ((cons-stream a b) (cons a (delay b)))))
+
+	(define scheme-apply apply)
+	(load "env.scm")
+	(load "black.scm") or (load "black-with-delta.scm")
+	(black)
+
+	To compile, you will have to include the definition of
+	cons-stream, so that it is properly compiled as a macro.
+
+MIT-Scheme Version 7.3.0:
+	(define scheme-apply apply)
+	(load "env.scm")
+	(load "black.scm") or (load "black-with-delta.scm")
+	(black)
+
+Gambit Scheme Version 2.2:
+	(define head car)
+	(define (tail x) (force (cdr x)))
+	(##define-macro (cons-stream a b)
+	  `(cons ,a (delay ,b)))
+
+	(define scheme-apply apply)
+	(load "env.scm")
+	(load "black.scm") or (load "black-with-delta.scm")
+	(black)
+
+	To compile, you will have to include the definition of
+	cons-stream, so that it is properly compiled as a macro.
+	You will also have to declare:
+
+	(##declare (r4rs-scheme))
+
+	so that delay is compiled as a special form.
+
+SCM Version 4e1:
+	(define head car)
+	(define (tail x) (force (cdr x)))
+	(define cons-stream
+	  (procedure->macro
+	     (lambda (x env)
+		(let ((a (cadr x))
+		      (b (caddr x)))
+		  `(cons ,a (delay ,b))))))
+
+	(define scheme-apply apply)
+	(load "env.scm")
+	(load "black.scm") or (load "black-with-delta.scm")
+	(black)
+
+elk:
+	(define head car)
+	(define (tail x) (force (cdr x)))
+	(define-macro (cons-stream a b)
+	  `(cons ,a (delay ,b)))
+	(autoload 'pp 'pp)
+
+	(define scheme-apply apply)
+	(load "env.scm")
+	(load "black.scm") or (load "black-with-delta.scm")
+	(black)
+
+	It seems that elk does not handle mutual tail recursion correctly.
+	Thus, stack overflow will eventually occur.
+
+To quit Black, type an interrupt key.  Black has no command to quit
+the system.  (exit 0) will merely exit the current level.
+
+The extensions that are not described in the paper are as follows:
+
+1. Special forms not described in the paper (cond, let, etc.) are
+   supported.
+
+2. Special forms delay, force, cons-stream, and primitive-EM are
+   supported, so that the implementation is meta-circular.  You can
+   execute Black on top of Black by typing the followings in Black:
+
+   (define head car)
+   (define (tail x) (force (cdr x)))
+   (load "env.scm")
+   (load "black.scm") or (load "black-with-delta.scm")
+   (black)
+
+3. (if <bool> <then>) without <else> is supported.
+
+4. The error "Wrong number of arguments" (for lambda closures) is
+   supported.
+
+When errors such as "Unbound variables" and "Not a Function" occur,
+the current level is properly terminated, and the control moves to the
+upper level.  However, some errors cause the Black system to stop.
+Such errors include the ones occured in the application of primitives,
+e.g., (car 0).  To handle these errors, we have to check if the
+application of primitives leads to an error every time a primitive is
+applied.  Because it would make the apply procedure much longer and
+tedious, we do not remedy this but leave it as an alternative way to
+quit the Black system.
+
+For questions, comments, etc., contact asai@is.s.u-tokyo.ac.jp.
+
+References
+
+[1] Kenichi Asai, Satoshi Matsuoka, and Akinori Yonezawa
+    "Duplication and Partial Evaluation
+     --- For a Better Understanding of Reflective Languages ---"
+    Lisp and Symbolic Computation, 9, pp.203-241, Kluwer Academic
+    Publishers, Boston (1996).
+
+[2] Olivier Danvy and Karoline Malmkjaer
+    "Intensions and Extensions in a Reflective Tower"
+    Lisp and Functional Programming, pp.327-341 (1988).
