@@ -1,0 +1,19 @@
+{% extends "base_livecode.html" %}
+
+{% block title %}The reflective language Black{% endblock %}
+
+{% block content %}
+<div class="live" id="init">
+(load "env.scm")
+(load "stream.scm")
+(define scheme-apply apply)
+(load "black.scm")
+(black)
+</div>
+
+<div class="live" id="play" data-lib="init">
+(define inc (lambda (x) (+ x 1)))
+(incr 1)
+</div>
+
+{% endblock %}
