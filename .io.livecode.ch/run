@@ -1,0 +1,4 @@
+#!/bin/bash
+set -e
+
+mechanics-shell --load $2 <$1 | tail -n +12
