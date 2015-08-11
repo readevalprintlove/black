@@ -1,0 +1,20 @@
+(define eval-instr
+  (lambda (exp env cont)
+    (let ((original-eval-application eval-application)
+          (instr-counter 0))
+      (set! eval-application
+            (lambda (exp env cont)
+              (set! instr-counter (+ instr-counter 1))
+              (original-eval-application exp env cont)))
+      (base-eval exp env (lambda (ans)
+                           (set! eval-application original-eval-application)
+                           (display "#app: ") (write instr-counter) (newline)
+                           (cont ans))))))
+
+(let ((original-eval-application eval-application))
+  (set! eval-application
+	(lambda (exp env cont)
+	   (cond ((eq? (car exp) 'instr)
+		  (eval-instr (car (cdr exp)) env cont))
+		 (else
+		  (original-eval-application exp env cont))))))

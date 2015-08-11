@@ -1,0 +1,9 @@
+(define add-app-hook!
+  (lambda (n ev)
+    (let ((original-eval-application eval-application))
+      (set! eval-application
+            (lambda (exp env cont)
+              (cond ((eq? (car exp) n)
+                     (ev exp env cont))
+                    (else
+                     (original-eval-application exp env cont))))))))

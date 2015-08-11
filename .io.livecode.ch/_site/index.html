@@ -12,8 +12,83 @@
 </div>
 
 <div class="live" id="play" data-lib="init">
+;; just like Scheme... at first
+
+(+ 2 1)
+
 (define inc (lambda (x) (+ x 1)))
-(incr 1)
+
+(inc 2)
+
+((lambda (x) (+ x 1)) 2)
+
+(map inc '(1 2 3))
+
+(map (lambda (x) (+ x 1)) '(1 2 3))
+
+(incr 2)
+;; error, loads new meta level
+;; $ New level loaded.
+;; $ 1-0: (eval-var: unbound variable: incr)
+;; Notice the prompt change!
+;; 0-* to 1-0
+;; the first number the meta level, i.e. the n in meta^n level
+;; the second number is just the query count at this level
+
+;; two ways to go back:
+;; (1) call old-cont
+(old-cont (lambda (x) (+ x 1)))
+;; (2) base-eval if we want to refer to inc
+;; (base-eval <exp> <env> <cont>)
+incr ;; typo again
+(base-eval 1 '() (lambda (v) v))
+incr ;; again
+(base-eval 'inc old-env (lambda (v) v))
+incr ;; again
+(base-eval 'inc old-env old-cont)
+
+;; notice we needed to quote inc at the meta-level
+;; why?
+
+;; well, let's jump back to the meta^1 level and see
+;; we can jump levels normally, no need to fake errors
+(exit 'hello)
+
+;; inc is not defined
+inc
+
+;; oh, we loaded meta^2 now!
+;; $ New level loaded.
+;; $ 2-0: (eval-var: unbound variable: inc)
+
+(old-cont 1)
+(old-cont 'back-to-user-level)
+
+;; motivation for EM
+(exit 'hello)
+(define foo 1)
+(old-cont foo)
+;; foo is unbound at level 0
+foo
+;; but at level 1, it is defined
+foo
+;; going back again
+(old-cont foo)
+
+;; can we access some meta level without pushing away
+;; (or popping? which way does it go?)
+;; without leaving the level?
+(EM foo)
+(EM (define bar 2))
+(EM bar)
+bar ;; not bound
+
+(EM (EM 1))
+(EM (EM foo))
+;; oops, we just loaded level 3
+(old-cont 1)
+;; interesting, we got straight back to 0
+;; some jumping indeed!
 </div>
 
 {% endblock %}
