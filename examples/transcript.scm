@@ -38,16 +38,21 @@ base-eval
 ;; or
 (exec-at-metalevel
  (load "examples/instr2.blk"))
+
+;; Church Encoding
+;; http://en.wikipedia.org/wiki/Church_encoding
+;; Types and Programming Languages: section 5.2, Programming in the Lambda-Calculus
 (load "examples/church.scm")
 (instr (prd c2))
 (instr (prd-alt c2))
 (instr (to_int (prd-alt c2)))
 (instr (to_int (prd c2)))
 
-;; taba
-
 (load "examples/start.scm")
 (EM (load "examples/utils.blk"))
+;; TABA: There And Back Again
+;; http://www.brics.dk/RS/02/12/BRICS-RS-02-12.pdf (ICFP pearl)
+;; http://brics.dk/RS/05/3/BRICS-RS-05-3.pdf (extended journal version)
 
 (EM (load "examples/taba.blk"))
 ;; or
