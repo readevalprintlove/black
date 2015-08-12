@@ -11,3 +11,6 @@ This is the source code for [Kenichi Asai](http://pllab.is.ocha.ac.jp/~asai/)'s 
 (load "black.scm")
 (black)
 ```
+
+See the [examples](examples/transcript.scm).
+Play in your browser at [io.livecode.ch](http://io.livecode.ch/learn/readevalprintlove/black)!

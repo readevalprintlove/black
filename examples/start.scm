@@ -1,0 +1,5 @@
+(load "env.scm")
+(load "stream.scm")
+(define scheme-apply apply)
+(load "black.scm")
+(black)

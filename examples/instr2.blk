@@ -1,0 +1,35 @@
+(define eval-instr
+  (lambda (exp env cont)
+    (let ((restore-thunks '())
+          (total-counter 0)
+          (display-msg (lambda (msg counter)
+                         (display "#") (display msg) (display ": ")
+                         (display counter) (newline))))
+      (let ((add-instr!
+             (lambda (msg original set-original!)
+               (let ((counter 0))
+                 (set! restore-thunks
+                       (cons (lambda ()
+                               (set! total-counter (+ total-counter counter))
+                               (set-original! original)
+                               (display-msg msg counter))
+                             restore-thunks))
+                 (set-original! (lambda (exp env cont)
+                                  (set! counter (+ counter 1))
+                                  (original exp env cont)))))))
+        (add-instr! 'app eval-application (lambda (v) (set! eval-application v)))
+        (add-instr! 'lam eval-lambda (lambda (v) (set! eval-lambda v)))
+        (add-instr! 'var eval-var (lambda (v) (set! eval-var v))))
+      (base-eval exp env (lambda (ans)
+                           (newline)
+                           (map  (lambda (t) (t)) restore-thunks)
+                           (display-msg 'total total-counter)
+                           (cont ans))))))
+
+(let ((original-eval-application eval-application))
+  (set! eval-application
+	(lambda (exp env cont)
+	   (cond ((eq? (car exp) 'instr)
+		  (eval-instr (car (cdr exp)) env cont))
+		 (else
+		  (original-eval-application exp env cont))))))
