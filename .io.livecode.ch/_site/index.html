@@ -5,7 +5,7 @@
 {% block content %}
 <h2>Warm up</h2>
 
-<p>Just like Scheme... at first.
+<p>Just like Scheme... at first.</p>
 <div class="live" id="up0" data-lib="">
 (+ 2 1)
 (define inc (lambda (x) (+ x 1)))
@@ -13,47 +13,47 @@
 ((lambda (x) (+ x 1)) 2)
 (map inc '(1 2 3))
 (map (lambda (x) (+ x 1)) '(1 2 3))
-</div></p>
+</div>
 
-<p>Error loads new meta level.
+<p>Error loads new meta level.</p>
 <div class="live" id="up1" data-lib="up0">
 (incr 2)
 </div>
-Notice the prompt change, from <code>0-7</code> to <code>1-0</code>.
+<p>Notice the prompt change, from <code>0-7</code> to <code>1-0</code>.
 The first number is the meta level, i.e. the <i>n</i> in meta<i><sup>n</sup></i> level. The second number is just the iteration counter at this level.</p>
 
 <p>Two ways to go back down.</p>
-<p>(1) call <code>old-cont</code>.
+
+<p>(1) call <code>old-cont</code>.</p>
 <div class="live" id="up2" data-lib="up0 up1">
 (old-cont (lambda (x) (+ x 1)))
-</div></p>
-<p>(2) use <code>(base-eval <i>exp</i> <i>env</i> <i>cont</i>)</code>.
+</div>
+<p>(2) use <code>(base-eval <i>exp</i> <i>env</i> <i>cont</i>)</code>.</p>
 <div class="live" id="up3" data-lib="up0 up1">
 (base-eval 1 '() (lambda (v) v))
 incr ;; typo again
 (base-eval 'inc old-env (lambda (v) v))
 incr ;; typo again
 (base-eval 'inc old-env old-cont)
-</div></p>
-
+</div>
 
 <p>Notice we needed to quote <code>inc</code> at the meta-level. Why?
 Let's jump back to the meta<sup>1</sup> level and see.
-We can jump levels normally with <code>exit</code>, no need to fake errors.
+We can jump levels normally with <code>exit</code>, no need to fake errors.</p>
 <div class="live" id="up4" data-lib="up0">
 (exit 'hello)
 
 ;; inc is not defined
 inc
-</div></p>
+</div>
 
-<p>Oh, we loaded meta<sup>2</sup> now! Let's go back to 0:
+<p>Oh, we loaded meta<sup>2</sup> now! Let's go back to 0:</p>
 <div class="live" id="up5" data-lib="up0 up4">
 (old-cont 1)
 (old-cont 'back-to-user-level)
-</div></p>
+</div>
 
-<p>To recap, a variable is local to a level:
+<p>To recap, a variable is local to a level:</p>
 <div class="live" id="up6" data-lib="">
 (exit 'hello)
 (define foo 1)
@@ -64,9 +64,9 @@ foo
 foo
 ;; going back again
 (old-cont foo)
-</div></p>
+</div>
 
-<p>Can we access some meta level without pushing away (or popping? which way does it go?) without leaving the level? Yes, with <code>EM</code>.
+<p>Can we access some meta level without pushing away (or popping? which way does it go?) without leaving the level? Yes, with <code>EM</code>.</p>
 <div class="live" id="up7" data-lib="">
 (EM foo)
 (EM (define bar 2))
@@ -78,7 +78,7 @@ bar ;; not bound
 ;; oops, we just loaded level 3
 (old-cont 1)
 </div>
-Interesting, we got straight back to 0 from 3, some jumping indeed!</p>
+<p>Interesting, we got straight back to 0 from 3, some jumping indeed!</p>
 
 <h2>The Mystery of Meta-Continuations Revealed</h2>
 
@@ -88,7 +88,7 @@ Interesting, we got straight back to 0 from 3, some jumping indeed!</p>
 
 <p>First, we redefine evaluation of variable (by mutating the meta
 level) so that when the variable name is <code>_dummy</code> we do
-something special: we call the continuation first with <code>1</code>, then <code>2</code>, then <code>3</code>.
+something special: we call the continuation first with <code>1</code>, then <code>2</code>, then <code>3</code>.</p>
 <div class="live norun" id="conti_a1" data-lib="">
 (EM (begin
 (define old-eval-var eval-var)
@@ -96,24 +96,24 @@ something special: we call the continuation first with <code>1</code>, then <cod
 (if (eq? '_dummy e) (begin (k 1) (k 2) (k 3))
 (old-eval-var e r k))))
 ))
-</div></p>
+</div>
 
-<p>What happens when we evaluate <code>_dummy</code>?
+<p>What happens when we evaluate <code>_dummy</code>?</p>
 <div class="live" id="conti_a2" data-lib="conti_a1">
 _dummy
-</div></p>
+</div>
 
-<p>OK, so it seems that it just jumps out at the first <code>1</code>? Not so fast:
+<p>OK, so it seems that it just jumps out at the first <code>1</code>? Not so fast:</p>
 <div class="live" id="conti_a3" data-lib="conti_a1">
 _dummy     ;; 1
 (exit 'up) ;; 2
 (exit 'up) ;; 3
 (exit 'up) ;; up (meta level)
-</div></p>
+</div>
 
 <h3>Being Pushy... Bug or Feature?</h3>
 
-<p><div class="live" id="conti_b1" data-lib="">
+<div class="live" id="conti_b1" data-lib="">
 (define where_am_i 'user)
 (EM (define where_am_i 'meta))
 (EM (let ((old-eval-var eval-var)
@@ -132,7 +132,7 @@ where_am_i            ;; user
 (EM where_am_i)       ;; user (!!!)
 (EM (EM where_am_i))  ;; meta
 (__k 2)               ;; unbound variable __k
-</div></p>
+</div>
 
 <h3>Further Reading</h3>
 
@@ -147,14 +147,14 @@ where_am_i            ;; user
 
 <p>Learn more about <a href="http://en.wikipedia.org/wiki/Church_encoding">Church Encodings on Wikipedia</a>. See also section 5.2 (<em>Programming in the Lambda-Calculus</em>) of <em><a href="https://www.cis.upenn.edu/~bcpierce/tapl/">Types and Programming Languages</a></em> by Pierce.</p>
 
-<p><div class="live" id="instr2" data-lib="">
+<div class="live" id="instr2" data-lib="">
 (exec-at-metalevel (load "examples/instr2.blk"))
 (load "examples/church.scm")
 (instr (prd c2))
 (instr (prd-alt c2))
 (instr (to_int (prd-alt c2)))
 (instr (to_int (prd c2)))
-</div></p>
+</div>
 
 <h3>There and Back Again</h3>
 
@@ -163,7 +163,7 @@ where_am_i            ;; user
  <a href="http://brics.dk/RS/05/3/BRICS-RS-05-3.pdf">extended journal version</a>) to construct <code>(cnv xs ys) = (zip xs (reverse ys))</code> in <code>n</code> recursive calls and no auxiliary data list, where <code>xs</code> and <code>ys</code> are lists of size <code>n</code>.</p>
 
 <p>It's fun to think about it, so let's not give it away. Suffice to
-say that it's helpful to visualize the stack.
+say that it's helpful to visualize the stack.</p>
 <div class="live" id="taba" data-lib="">
 (EM (load "examples/utils.blk"))
 (EM (load "examples/taba.blk"))
@@ -172,7 +172,7 @@ say that it's helpful to visualize the stack.
 
 (load "examples/pal.scm")
 (taba (pal_c walk) (pal_c '(1 2 2 1)))
-</div></p>
+</div>
 
 <h2>Your Turn</h2>
 
