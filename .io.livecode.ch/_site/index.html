@@ -80,4 +80,63 @@ bar ;; not bound
 </div>
 Interesting, we got straight back to 0 from 3, some jumping indeed!</p>
 
+<h2>The Mystery of Meta-Continuations Revealed</h2>
+
+<p>Each level in the tower has its own environment and continuation.</p>
+
+<h3>Bouncing Up and Down</h3>
+
+<p>First, we redefine evaluation of variable (by mutating the meta
+level) so that when the variable name is <code>_dummy</code> we do
+something special: we call the continuation first with <code>1</code>, then <code>2</code>, then <code>3</code>.
+<div class="live norun" id="conti_a1" data-lib="">
+(EM (begin
+(define old-eval-var eval-var)
+(set! eval-var (lambda (e r k)
+(if (eq? '_dummy e) (begin (k 1) (k 2) (k 3))
+(old-eval-var e r k))))
+))
+</div></p>
+
+<p>What happens when we evaluate <code>_dummy</code>?
+<div class="live" id="conti_a2" data-lib="conti_a1">
+_dummy
+</div></p>
+
+<p>OK, so it seems that it just jumps out at the first <code>1</code>? Not so fast:
+<div class="live" id="conti_a3" data-lib="conti_a1">
+_dummy     ;; 1
+(exit 'up) ;; 2
+(exit 'up) ;; 3
+(exit 'up) ;; up (meta level)
+</div></p>
+
+<h3>Being Pushy... Bug or Feature?</h3>
+
+<p><div class="live" id="conti_b1" data-lib="">
+(define where_am_i 'user)
+(EM (define where_am_i 'meta))
+(EM (let ((old-eval-var eval-var)
+          (__k (lambda (x) x)))
+      (set! eval-var (lambda (e r k)
+                       (if (eq? e '__k) (k __k)
+                           (begin
+	                           (if (eq? e '_) (set! __k k) '())
+                               (old-eval-var e r k)))))))
+(define _ 0)
+(+ _ 1)
+where_am_i            ;; user
+(EM where_am_i)       ;; meta
+(__k 2)
+where_am_i            ;; user
+(EM where_am_i)       ;; user (!!!)
+(EM (EM where_am_i))  ;; meta
+(__k 2)               ;; unbound variable __k
+</div></p>
+
+<h3>Further Reading</h3>
+
+<p>If you'd like to learn more about semantics of reflective towers, including pushy vs. jumpy continuations, see the paper
+<em><a href="http://www.daimi.au.dk/~danvy/Papers/danvy-malmkjaer-LFP88.pdf">Intensions and Extensions in a Reflective Tower</a></em> (PDF) by Danvy et al.</p>
+
 {% endblock %}
