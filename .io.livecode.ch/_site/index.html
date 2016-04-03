@@ -3,68 +3,58 @@
 {% block title %}The reflective language Black{% endblock %}
 
 {% block content %}
-<div class="live" id="init">
-(load "env.scm")
-(load "stream.scm")
-(define scheme-apply apply)
-(load "black.scm")
-(black)
-</div>
+<h2>Warm up</h2>
 
-<div class="live" id="play" data-lib="init">
-;; just like Scheme... at first
-
+<p>Just like Scheme... at first.
+<div class="live" id="up0" data-lib="">
 (+ 2 1)
-
 (define inc (lambda (x) (+ x 1)))
-
 (inc 2)
-
 ((lambda (x) (+ x 1)) 2)
-
 (map inc '(1 2 3))
-
 (map (lambda (x) (+ x 1)) '(1 2 3))
+</div></p>
 
+<p>Error loads new meta level.
+<div class="live" id="up1" data-lib="up0">
 (incr 2)
-;; error, loads new meta level
-;; $ New level loaded.
-;; $ 1-0: (eval-var: unbound variable: incr)
-;; Notice the prompt change!
-;; 0-* to 1-0
-;; the first number the meta level, i.e. the n in meta^n level
-;; the second number is just the query count at this level
+</div>
+Notice the prompt change, from <code>0-7</code> to <code>1-0</code>.
+The first number is the meta level, i.e. the <i>n</i> in meta<i><sup>n</sup></i> level. The second number is just the iteration counter at this level.</p>
 
-;; two ways to go back:
-;; (1) call old-cont
+<p>Two ways to go back down.</p>
+<p>(1) call <code>old-cont</code>.
+<div class="live" id="up2" data-lib="up0 up1">
 (old-cont (lambda (x) (+ x 1)))
-;; (2) base-eval if we want to refer to inc
-;; (base-eval <exp> <env> <cont>)
-incr ;; typo again
+</div></p>
+<p>(2) use <code>(base-eval <i>exp</i> <i>env</i> <i>cont</i>)</code>.
+<div class="live" id="up3" data-lib="up0 up1">
 (base-eval 1 '() (lambda (v) v))
-incr ;; again
+incr ;; typo again
 (base-eval 'inc old-env (lambda (v) v))
-incr ;; again
+incr ;; typo again
 (base-eval 'inc old-env old-cont)
+</div></p>
 
-;; notice we needed to quote inc at the meta-level
-;; why?
 
-;; well, let's jump back to the meta^1 level and see
-;; we can jump levels normally, no need to fake errors
+<p>Notice we needed to quote <code>inc</code> at the meta-level. Why?
+Let's jump back to the meta<sup>1</sup> level and see.
+We can jump levels normally with <code>exit</code>, no need to fake errors.
+<div class="live" id="up4" data-lib="up0">
 (exit 'hello)
 
 ;; inc is not defined
 inc
+</div></p>
 
-;; oh, we loaded meta^2 now!
-;; $ New level loaded.
-;; $ 2-0: (eval-var: unbound variable: inc)
-
+<p>Oh, we loaded meta<sup>2</sup> now! Let's go back to 0:
+<div class="live" id="up5" data-lib="up0 up4">
 (old-cont 1)
 (old-cont 'back-to-user-level)
+</div></p>
 
-;; motivation for EM
+<p>To recap, a variable is local to a level:
+<div class="live" id="up6" data-lib="">
 (exit 'hello)
 (define foo 1)
 (old-cont foo)
@@ -74,10 +64,10 @@ foo
 foo
 ;; going back again
 (old-cont foo)
+</div></p>
 
-;; can we access some meta level without pushing away
-;; (or popping? which way does it go?)
-;; without leaving the level?
+<p>Can we access some meta level without pushing away (or popping? which way does it go?) without leaving the level? Yes, with <code>EM</code>.
+<div class="live" id="up7" data-lib="">
 (EM foo)
 (EM (define bar 2))
 (EM bar)
@@ -87,8 +77,7 @@ bar ;; not bound
 (EM (EM foo))
 ;; oops, we just loaded level 3
 (old-cont 1)
-;; interesting, we got straight back to 0
-;; some jumping indeed!
 </div>
+Interesting, we got straight back to 0 from 3, some jumping indeed!</p>
 
 {% endblock %}
