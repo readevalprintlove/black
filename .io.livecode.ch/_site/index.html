@@ -139,4 +139,64 @@ where_am_i            ;; user
 <p>If you'd like to learn more about semantics of reflective towers, including pushy vs. jumpy continuations, see the paper
 <em><a href="http://www.daimi.au.dk/~danvy/Papers/danvy-malmkjaer-LFP88.pdf">Intensions and Extensions in a Reflective Tower</a></em> (PDF) by Danvy et al.</p>
 
+<h2>Fun with Towers</h2>
+
+<p>The loaded code in the examples below is also <a href="https://github.com/readevalprintlove/black/tree/master/examples">on Github</a>.</p>
+
+<h3>Counting Evaluations</h3>
+
+<p>Learn more about <a href="http://en.wikipedia.org/wiki/Church_encoding">Church Encodings on Wikipedia</a>. See also section 5.2 (<em>Programming in the Lambda-Calculus</em>) of <em><a href="https://www.cis.upenn.edu/~bcpierce/tapl/">Types and Programming Languages</a></em> by Pierce.</p>
+
+<p><div class="live" id="instr2" data-lib="">
+(exec-at-metalevel (load "examples/instr2.blk"))
+(load "examples/church.scm")
+(instr (prd c2))
+(instr (prd-alt c2))
+(instr (to_int (prd-alt c2)))
+(instr (to_int (prd c2)))
+</div></p>
+
+<h3>There and Back Again</h3>
+
+<p>There is a cute trick by Danvy et al.
+(<a href="http://www.brics.dk/RS/02/12/BRICS-RS-02-12.pdf">ICFP</a>,
+ <a href="http://brics.dk/RS/05/3/BRICS-RS-05-3.pdf">extended journal version</a>) to construct <code>(cnv xs ys) = (zip xs (reverse ys))</code> in <code>n</code> recursive calls and no auxiliary data list, where <code>xs</code> and <code>ys</code> are lists of size <code>n</code>.</p>
+
+<p>It's fun to think about it, so let's not give it away. Suffice to
+say that it's helpful to visualize the stack.
+<div class="live" id="taba" data-lib="">
+(EM (load "examples/utils.blk"))
+(EM (load "examples/taba.blk"))
+(load "examples/cnv.scm")
+(taba (cnv3 walk) (cnv3 '(1 2 3) '(a b c)))
+
+(load "examples/pal.scm")
+(taba (pal_c walk) (pal_c '(1 2 2 1)))
+</div></p>
+
+<h2>Your Turn</h2>
+
+<div class="live" id="play" data-lib="">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+
+<p>Happy Happy Joy Joy!</p>
+
 {% endblock %}
