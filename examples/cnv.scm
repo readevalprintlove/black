@@ -1,7 +1,7 @@
 (define zip
   (lambda (xs ys)
     (cond
-      ((and (null? xs) (null? ys))
+      ((or (null? xs) (null? ys))
        '())
       (else
        (cons

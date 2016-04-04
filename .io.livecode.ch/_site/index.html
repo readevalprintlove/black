@@ -3,68 +3,58 @@
 {% block title %}The reflective language Black{% endblock %}
 
 {% block content %}
-<div class="live" id="init">
-(load "env.scm")
-(load "stream.scm")
-(define scheme-apply apply)
-(load "black.scm")
-(black)
+<h2>Warm up</h2>
+
+<p>Just like Scheme... at first.</p>
+<div class="live" id="up0" data-lib="">
+(+ 2 1)
+(define inc (lambda (x) (+ x 1)))
+(inc 2)
+((lambda (x) (+ x 1)) 2)
+(map inc '(1 2 3))
+(map (lambda (x) (+ x 1)) '(1 2 3))
 </div>
 
-<div class="live" id="play" data-lib="init">
-;; just like Scheme... at first
-
-(+ 2 1)
-
-(define inc (lambda (x) (+ x 1)))
-
-(inc 2)
-
-((lambda (x) (+ x 1)) 2)
-
-(map inc '(1 2 3))
-
-(map (lambda (x) (+ x 1)) '(1 2 3))
-
+<p>Error loads new meta level.</p>
+<div class="live" id="up1" data-lib="up0">
 (incr 2)
-;; error, loads new meta level
-;; $ New level loaded.
-;; $ 1-0: (eval-var: unbound variable: incr)
-;; Notice the prompt change!
-;; 0-* to 1-0
-;; the first number the meta level, i.e. the n in meta^n level
-;; the second number is just the query count at this level
+</div>
+<p>Notice the prompt change, from <code>0-7</code> to <code>1-0</code>.
+The first number is the meta level, i.e. the <i>n</i> in meta<i><sup>n</sup></i> level. The second number is just the iteration counter at this level.</p>
 
-;; two ways to go back:
-;; (1) call old-cont
+<p>Two ways to go back down.</p>
+
+<p>(1) call <code>old-cont</code>.</p>
+<div class="live" id="up2" data-lib="up0 up1">
 (old-cont (lambda (x) (+ x 1)))
-;; (2) base-eval if we want to refer to inc
-;; (base-eval <exp> <env> <cont>)
-incr ;; typo again
+</div>
+<p>(2) use <code>(base-eval <i>exp</i> <i>env</i> <i>cont</i>)</code>.</p>
+<div class="live" id="up3" data-lib="up0 up1">
 (base-eval 1 '() (lambda (v) v))
-incr ;; again
+incr ;; typo again
 (base-eval 'inc old-env (lambda (v) v))
-incr ;; again
+incr ;; typo again
 (base-eval 'inc old-env old-cont)
+</div>
 
-;; notice we needed to quote inc at the meta-level
-;; why?
-
-;; well, let's jump back to the meta^1 level and see
-;; we can jump levels normally, no need to fake errors
+<p>Notice we needed to quote <code>inc</code> at the meta-level. Why?
+Let's jump back to the meta<sup>1</sup> level and see.
+We can jump levels normally with <code>exit</code>, no need to fake errors.</p>
+<div class="live" id="up4" data-lib="up0">
 (exit 'hello)
 
 ;; inc is not defined
 inc
+</div>
 
-;; oh, we loaded meta^2 now!
-;; $ New level loaded.
-;; $ 2-0: (eval-var: unbound variable: inc)
-
+<p>Oh, we loaded meta<sup>2</sup> now! Let's go back to 0:</p>
+<div class="live" id="up5" data-lib="up0 up4">
 (old-cont 1)
 (old-cont 'back-to-user-level)
+</div>
 
-;; motivation for EM
+<p>To recap, a variable is local to a level:</p>
+<div class="live" id="up6" data-lib="">
 (exit 'hello)
 (define foo 1)
 (old-cont foo)
@@ -74,10 +64,10 @@ foo
 foo
 ;; going back again
 (old-cont foo)
+</div>
 
-;; can we access some meta level without pushing away
-;; (or popping? which way does it go?)
-;; without leaving the level?
+<p>Can we access some meta level without pushing away (or popping? which way does it go?) without leaving the level? Yes, with <code>EM</code>.</p>
+<div class="live" id="up7" data-lib="">
 (EM foo)
 (EM (define bar 2))
 (EM bar)
@@ -87,8 +77,126 @@ bar ;; not bound
 (EM (EM foo))
 ;; oops, we just loaded level 3
 (old-cont 1)
-;; interesting, we got straight back to 0
-;; some jumping indeed!
 </div>
+<p>Interesting, we got straight back to 0 from 3, some jumping indeed!</p>
+
+<h2>The Mystery of Meta-Continuations Revealed</h2>
+
+<p>Each level in the tower has its own environment and continuation.</p>
+
+<h3>Bouncing Up and Down</h3>
+
+<p>First, we redefine evaluation of variable (by mutating the meta
+level) so that when the variable name is <code>_dummy</code> we do
+something special: we call the continuation first with <code>1</code>, then <code>2</code>, then <code>3</code>.</p>
+<div class="live norun" id="conti_a1" data-lib="">
+(EM (begin
+(define old-eval-var eval-var)
+(set! eval-var (lambda (e r k)
+(if (eq? '_dummy e) (begin (k 1) (k 2) (k 3))
+(old-eval-var e r k))))
+))
+</div>
+
+<p>What happens when we evaluate <code>_dummy</code>?</p>
+<div class="live" id="conti_a2" data-lib="conti_a1">
+_dummy
+</div>
+
+<p>OK, so it seems that it just jumps out at the first <code>1</code>? Not so fast:</p>
+<div class="live" id="conti_a3" data-lib="conti_a1">
+_dummy     ;; 1
+(exit 'up) ;; 2
+(exit 'up) ;; 3
+(exit 'up) ;; up (meta level)
+</div>
+
+<h3>Being Pushy... Bug or Feature?</h3>
+
+<div class="live" id="conti_b1" data-lib="">
+(define where_am_i 'user)
+(EM (define where_am_i 'meta))
+(EM (let ((old-eval-var eval-var)
+          (__k (lambda (x) x)))
+      (set! eval-var (lambda (e r k)
+                       (if (eq? e '__k) (k __k)
+                           (begin
+	                           (if (eq? e '_) (set! __k k) '())
+                               (old-eval-var e r k)))))))
+(define _ 0)
+(+ _ 1)
+where_am_i            ;; user
+(EM where_am_i)       ;; meta
+(__k 2)
+where_am_i            ;; user
+(EM where_am_i)       ;; user (!!!)
+(EM (EM where_am_i))  ;; meta
+(__k 2)               ;; unbound variable __k
+</div>
+
+<h3>Further Reading</h3>
+
+<p>If you'd like to learn more about semantics of reflective towers, including pushy vs. jumpy continuations, see the paper
+<em><a href="http://www.daimi.au.dk/~danvy/Papers/danvy-malmkjaer-LFP88.pdf">Intensions and Extensions in a Reflective Tower</a></em> (PDF) by Danvy et al.</p>
+
+<h2>Fun with Towers</h2>
+
+<p>The loaded code in the examples below is also <a href="https://github.com/readevalprintlove/black/tree/master/examples">on Github</a>.</p>
+
+<h3>Counting Evaluations</h3>
+
+<p>Learn more about <a href="http://en.wikipedia.org/wiki/Church_encoding">Church Encodings on Wikipedia</a>. See also section 5.2 (<em>Programming in the Lambda-Calculus</em>) of <em><a href="https://www.cis.upenn.edu/~bcpierce/tapl/">Types and Programming Languages</a></em> by Pierce.</p>
+
+<div class="live" id="instr2" data-lib="">
+(exec-at-metalevel (load "examples/instr2.blk"))
+(load "examples/church.scm")
+(instr (prd c2))
+(instr (prd-alt c2))
+(instr (to_int (prd-alt c2)))
+(instr (to_int (prd c2)))
+</div>
+
+<h3>There and Back Again</h3>
+
+<p>There is a cute trick by Danvy et al.
+(<a href="http://www.brics.dk/RS/02/12/BRICS-RS-02-12.pdf">ICFP</a>,
+ <a href="http://brics.dk/RS/05/3/BRICS-RS-05-3.pdf">extended journal version</a>) to construct <code>(cnv xs ys) = (zip xs (reverse ys))</code> in <code>n</code> recursive calls and no auxiliary data list, where <code>xs</code> and <code>ys</code> are lists of size <code>n</code>.</p>
+
+<p>It's fun to think about it, so let's not give it away. Suffice to
+say that it's helpful to visualize the stack.</p>
+<div class="live" id="taba" data-lib="">
+(EM (load "examples/utils.blk"))
+(EM (load "examples/taba.blk"))
+(load "examples/cnv.scm")
+(taba (cnv3 walk) (cnv3 '(1 2 3) '(a b c)))
+
+(load "examples/pal.scm")
+(taba (pal_c walk) (pal_c '(1 2 2 1)))
+</div>
+
+<h2>Your Turn</h2>
+
+<div class="live" id="play" data-lib="">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+
+<p>Happy Happy Joy Joy!</p>
 
 {% endblock %}

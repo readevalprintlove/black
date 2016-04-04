@@ -1,4 +1,5 @@
 #!/bin/bash
 set -e
 
-mechanics-shell --load $2 <$1 | tail -n +12
+cat $2 $1 >out.scm
+mechanics-shell --load init.scm <out.scm | tail -n +15
