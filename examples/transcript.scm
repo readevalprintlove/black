@@ -1,3 +1,6 @@
+;; for MIT Scheme:
+(load-option 'format)
+
 ;; start running from the parent directory
 (load "env.scm")
 (load "stream.scm")
@@ -58,7 +61,7 @@ base-eval
 ;; or
 (EM (load "examples/taba2.blk"))
 ;; or
-;; NB: this version requires adding printf as a primitive
+(EM (load "examples/stack.scm"))
 (EM (load "examples/taba3.blk"))
 
 (load "examples/cnv.scm")

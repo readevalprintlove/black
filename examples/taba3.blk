@@ -1,5 +1,3 @@
-(load "examples/stack.scm")
-
 (define eval-taba-call
   (lambda (add! original-eval-application)
     (lambda (exp env cont)
