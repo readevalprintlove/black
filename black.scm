@@ -286,6 +286,8 @@
   (write (filter (car args))))
 (define (primitive-pp . args)
   (pp (filter (car args))))
+(define (primitive-format . args)
+  (apply format (map filter args)))
 (define (primitive-print lst depth length)
   (define (print-sub lst d l top?)
     (cond ((pair? lst)
@@ -353,7 +355,7 @@
 (define primitive-procedures
   (list car cdr cons list pair? null? eq? eqv? equal? not set-car! set-cdr!
 	append
-	primitive-write primitive-pp primitive-display newline read
+	primitive-write primitive-pp primitive-display newline primitive-format read
 	primitive-print primitive-procedure?
 	+ - * / = < > quotient remainder number?
 	boolean? string? symbol? assq member length force
@@ -384,6 +386,7 @@
   (cons 'display		primitive-display)
   (cons 'print			primitive-print)
   (cons 'newline		newline)
+  (cons 'format			primitive-format)
   (cons 'read			read)
   (cons '+			+)
   (cons '-			-)
