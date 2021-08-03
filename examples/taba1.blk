@@ -1,0 +1,36 @@
+(define eval-taba-call
+  (lambda (original-eval-application)
+    (lambda (exp env cont)
+      (write 'taba-push:)
+      (eval-list
+       (cdr exp) env
+       (lambda (ans-args)
+         (write (cons (car exp) ans-args))
+         (newline)
+         (original-eval-application
+          exp env
+          (lambda (ans)
+            (write 'taba-pop:)
+            (write ans)
+            (newline)
+            (cont ans))))))))
+
+(define eval-taba
+  (lambda (fns)
+    (lambda (exp env cont)
+      (let ((original-eval-application eval-application))
+        (map (lambda (fn)
+               (add-app-hook!
+                fn
+                (eval-taba-call eval-application)))
+             fns)
+        (base-eval
+         exp env
+         (lambda (ans)
+           (set! eval-application original-eval-application)
+           (cont ans)))))))
+
+(add-app-hook!
+ 'taba
+ (lambda (exp env cont)
+   ((eval-taba (car (cdr exp))) (car (cdr (cdr exp))) env cont)))
