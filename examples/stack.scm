@@ -3,6 +3,7 @@
 
 (define print-stack
   (lambda (es)
+    (newline)
     (let ((m "~26A~26A~%"))
       (map ;; for-each
        (lambda (e)
