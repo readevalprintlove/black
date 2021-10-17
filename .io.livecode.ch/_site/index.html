@@ -166,9 +166,9 @@ where_am_i            ;; user
 say that it's helpful to visualize the stack.</p>
 <div class="live" id="taba" data-lib="">
 (EM (load "examples/utils.blk"))
-(EM (load "examples/taba.blk"))
+(EM (load "examples/taba1.blk"))
 (load "examples/cnv.scm")
-(taba (cnv3 walk) (cnv3 '(1 2 3) '(a b c)))
+(taba (cnv walk) (cnv '(1 2 3) '(a b c)))
 
 (load "examples/pal.scm")
 (taba (pal_c walk) (pal_c '(1 2 2 1)))
@@ -179,7 +179,7 @@ say that it's helpful to visualize the stack.</p>
 (EM (load "examples/stack.scm"))
 (EM (load "examples/taba3.blk"))
 (load "examples/cnv.scm")
-(taba (cnv3 walk) (cnv3 '(1 2 3) '(a b c)))
+(taba (cnv walk) (cnv '(1 2 3) '(a b c)))
 
 (load "examples/pal.scm")
 (taba (pal_c walk) (pal_c '(1 2 2 1)))

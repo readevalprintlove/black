@@ -1,0 +1,49 @@
+;; file to be loaded at metalevel
+
+;; reify env
+(EM
+ (begin
+   (define old-eval-var eval-var)
+   (set! eval-var
+     (lambda (e r k)
+       (if (eq? '_env e) (k r) (old-eval-var e r k))))
+   ))
+
+(EM
+ (begin
+   (define undo-list '())
+   (define old-eval-set! eval-set!)
+   (define list
+     (lambda args args))
+   (set! eval-set!
+     (lambda (e r k)
+       (let ((name (car (cdr e))))
+         (eval-var name r (lambda (v)
+                            (set! undo-list (cons (cons name v) undo-list))
+                            (old-eval-set! e r k))))))
+   (define reflect-undo!
+     (lambda (r)
+       (if (null? undo-list)
+           '()
+           (begin
+             (old-eval-set!
+              (list 'set! (car (car undo-list)) (list 'quote (cdr (car undo-list))))
+              r
+              (lambda (v) v))
+             (set! undo-list (cdr undo-list))
+             'done))))
+   ))
+
+(define undo!
+  (lambda ()
+    ((EM reflect-undo!) _env)))
+
+;; (EM (load "examples/undo.blk))
+;; (EM (define old-eval-var eval-var))
+;; (EM (set! eval-var (lambda (e r k) (if (eq? e 'n) (k 0) (old-eval-var e r k)))))
+;; (define n 1)
+;; n ;; 0
+;; (EM (eq? old-eval-var eval-var)) ;; false
+;; (EM (undo!))
+;; n ;; 1
+;; (EM (eq? old-eval-var eval-var)) ;; true

@@ -36,6 +36,8 @@
                      (cdr ys))))))))
     (car (walk xs))))
 
+(define cnv cnv3)
+
 #;
 (begin
   (zip '(1 2 3) '(a b c))
