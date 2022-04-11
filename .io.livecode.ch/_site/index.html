@@ -30,10 +30,6 @@ The first number is the meta level, i.e. the <i>n</i> in meta<i><sup>n</sup></i>
 </div>
 <p>(2) use <code>(base-eval <i>exp</i> <i>env</i> <i>cont</i>)</code>.</p>
 <div class="live" id="up3" data-lib="up0 up1">
-(base-eval 1 '() (lambda (v) v))
-incr ;; typo again
-(base-eval 'inc old-env (lambda (v) v))
-incr ;; typo again
 (base-eval 'inc old-env old-cont)
 </div>
 
